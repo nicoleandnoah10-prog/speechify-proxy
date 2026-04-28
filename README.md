@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         input: text,
-        voice_id,
+        voice_id: voice_id,
         audio_format: "mp3",
         model: "simba-english"
       })
@@ -22,15 +22,20 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
+    // 👇 IMPORTANT: show error if Speechify fails
     if (!response.ok) {
+      console.error("Speechify error:", data);
       return res.status(response.status).json(data);
     }
 
+    // 👇 Convert base64 → audio
     const audioBuffer = Buffer.from(data.audio_data, "base64");
 
     res.setHeader("Content-Type", "audio/mpeg");
     res.send(audioBuffer);
+
   } catch (error) {
-    res.status(500).json({ error: error.message || "Speechify failed" });
+    console.error("Server error:", error);
+    res.status(500).json({ error: "Speechify failed" });
   }
 }
